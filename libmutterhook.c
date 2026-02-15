@@ -7,7 +7,14 @@ typedef struct _MetaWindow MetaWindow;
 typedef void ClutterEvent;
 typedef unsigned int guint32;
 
-static double current_multiplier = 1.0;
+typedef enum {
+    CLUTTER_SCROLL_SOURCE_UNKNOWN,
+    CLUTTER_SCROLL_SOURCE_WHEEL,
+    CLUTTER_SCROLL_SOURCE_FINGER,
+    CLUTTER_SCROLL_SOURCE_CONTINUOUS
+} ClutterScrollSource;
+
+static volatile double current_multiplier = 1.0;
 
 // Hook on focus change
 void meta_display_set_input_focus(MetaDisplay *display, MetaWindow *window, guint32 timestamp) {
@@ -37,10 +44,20 @@ void meta_display_set_input_focus(MetaDisplay *display, MetaWindow *window, guin
 // hook event sender
 void clutter_event_get_scroll_delta(const ClutterEvent *event, double *dx, double *dy) {
     static void (*orig_scroll)(const ClutterEvent*, double*, double*) = NULL;
-    if (!orig_scroll) orig_scroll = dlsym(RTLD_NEXT, "clutter_event_get_scroll_delta");
+    static ClutterScrollSource (*get_source)(const ClutterEvent*) = NULL;
+	if (!orig_scroll) {
+	    orig_scroll = dlsym(RTLD_NEXT, "clutter_event_get_scroll_delta");
+	    get_source = dlsym(RTLD_NEXT, "clutter_event_get_scroll_source");
+    }
 
     orig_scroll(event, dx, dy);
 
-    if (dx) *dx *= current_multiplier;
-    if (dy) *dy *= current_multiplier;
+	if (get_source) {
+        ClutterScrollSource src = get_source(event);
+        
+        if (src == CLUTTER_SCROLL_SOURCE_FINGER || src == CLUTTER_SCROLL_SOURCE_CONTINUOUS) {
+            if (dx) *dx *= current_multiplier;
+            if (dy) *dy *= current_multiplier;
+        }
+    }
 }
