@@ -21,7 +21,19 @@ Run GNOME Shell with the hook:
 export LD_PRELOAD=/path/to/libmutterhook.so
 ```
 
-*Note: To make it permanent, add it to `/etc/ld.so.preload`.
+If you use systemd the recommended way load the library is an override:
+
+```bash
+# unit name might be different in your system
+systemctl --user edit org.gnome.Shell.service
+```
+
+then add this in the staging area:
+
+```ini
+[Service]
+Environment="LD_PRELOAD=/home/tuo_utente/percorso/libmutterhook.so"
+```
 
 ## Requirements
 
