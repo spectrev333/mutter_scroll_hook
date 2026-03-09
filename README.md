@@ -32,7 +32,7 @@ then add this in the staging area:
 
 ```ini
 [Service]
-Environment="LD_PRELOAD=/home/tuo_utente/percorso/libmutterhook.so"
+Environment="LD_PRELOAD=/path/to/libmutterhook.so"
 ```
 
 ## Requirements
